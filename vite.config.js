@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/Fermat_MobileWebApp/',
+  base: '/style-capture/',
   server: {
     port: 3000,
     host: true,

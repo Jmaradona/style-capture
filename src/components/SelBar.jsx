@@ -1,5 +1,6 @@
 import React from 'react';
 import { Send, Move } from './icons';
+import { BRAND } from '../lib/brand';
 
 export default function SelBar({ count, total, onSend, onMove, onAll, onNone }) {
   const all = count === total && total > 0;
@@ -27,7 +28,7 @@ export default function SelBar({ count, total, onSend, onMove, onAll, onNone }) 
           background: has ? 'var(--primary)' : 'var(--muted)', color: has ? 'white' : 'var(--mfg)',
           boxShadow: has ? '0 3px 10px rgba(87,39,230,.35)' : 'none', transition: 'all .14s',
         }}>
-          <Send /> Fermat
+          <Send /> {BRAND}
         </button>
       </div>
     </div>

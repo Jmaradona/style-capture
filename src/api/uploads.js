@@ -5,7 +5,7 @@
  *
  * Flow:
  * 1. User captures/selects photos on mobile
- * 2. "Send to Fermat" triggers uploadImages()
+ * 2. "Send" triggers uploadImages()
  * 3. Images are POSTed to backend with the session token
  * 4. Backend stores them in the user's folder structure
  *
@@ -28,7 +28,7 @@ export async function uploadImages(images, collectionName) {
 
   // ── STUB MODE (no backend connected) ──
   if (!session?.token) {
-    console.log('[FERMAT] No session — stub mode', {
+    console.log('[SC] No session — stub mode', {
       collectionName,
       imageCount: images.length,
       images: images.map((i) => i.url),
@@ -68,7 +68,7 @@ export async function uploadImages(images, collectionName) {
     const data = await res.json();
     return { success: true, count: data.uploadedCount || images.length };
   } catch (err) {
-    console.error('[FERMAT] Upload failed:', err);
+    console.error('[SC] Upload failed:', err);
     return { success: false, count: 0, error: err.message };
   }
 }

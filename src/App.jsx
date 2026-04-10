@@ -9,6 +9,7 @@ import { uploadImages } from './api/uploads';
 
 // Utils
 import { toDataURL } from './lib/utils';
+import { BRAND } from './lib/brand';
 
 // Components
 import Nav from './components/Nav';
@@ -89,13 +90,13 @@ export default function App() {
     exitSel();
   };
 
-  // ── Send to Fermat ──
-  const sendToFermat = async (images) => {
+  // ── Send to desktop ──
+  const sendToDesktop = async (images) => {
     setUploading(true);
     try {
       const result = await uploadImages(images, active.name);
       if (result.stub) {
-        alert(`Sent ${images.length} image${images.length !== 1 ? 's' : ''} to Fermat`);
+        alert(`Sent ${images.length} image${images.length !== 1 ? 's' : ''} to ${BRAND}`);
       } else if (result.success) {
         alert(`Uploaded ${result.count} image${result.count !== 1 ? 's' : ''} successfully`);
       } else {
@@ -230,12 +231,12 @@ export default function App() {
                         }}>{c.name}</div>
                         <div style={{ fontSize: 12, color: 'var(--mfg)', marginTop: 1 }}>{c.images.length} items</div>
                       </div>
-                      <button onClick={(e) => { e.stopPropagation(); sendToFermat(c.images); }} style={{
+                      <button onClick={(e) => { e.stopPropagation(); sendToDesktop(c.images); }} style={{
                         display: 'flex', alignItems: 'center', gap: 4, padding: '7px 10px', borderRadius: 100,
                         fontSize: 12, fontWeight: 600, background: 'var(--primary)', color: 'white', flexShrink: 0,
                         boxShadow: '0 2px 8px rgba(87,39,230,.25)',
                       }}>
-                        <Send /> Fermat
+                        <Send /> {BRAND}
                       </button>
                       <button onClick={(e) => { e.stopPropagation(); setSheet({ type: 'opts', col: c }); }} style={{
                         width: 30, height: 30, borderRadius: 8, display: 'flex', alignItems: 'center',
@@ -258,7 +259,7 @@ export default function App() {
         <SelBar
           count={selIds.size}
           total={active.images.length}
-          onSend={() => { sendToFermat(active.images.filter((i) => selIds.has(i.id))); exitSel(); }}
+          onSend={() => { sendToDesktop(active.images.filter((i) => selIds.has(i.id))); exitSel(); }}
           onMove={() => setShowMove(true)}
           onAll={() => setSelIds(new Set(active.images.map((i) => i.id)))}
           onNone={() => setSelIds(new Set())}
