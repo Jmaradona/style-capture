@@ -1,87 +1,81 @@
-/**
- * Upload API
- *
- * Handles sending images to the desktop app's backend.
- *
- * Flow:
- * 1. User captures/selects photos on mobile
- * 2. "Send" triggers uploadImages()
- * 3. Images are POSTed to backend with the session token
- * 4. Backend stores them in the user's folder structure
- *
- * Currently a stub — logs to console.
- * Replace with real fetch calls when backend is ready.
- */
+const CDN_URL = 'https://gateway.fermat.app/resources/upload';
+const KEY_STORE = 'sc-ak';
 
-import { apiFetch } from './client';
-import { getSession } from './session';
+// ── API Key management (localStorage, never in source) ──
 
-/**
- * Upload images to the backend.
- *
- * @param {Array<{id: string, url: string}>} images - images to send
- * @param {string} collectionName - name of the source collection
- * @returns {Promise<{success: boolean, count: number}>}
- */
-export async function uploadImages(images, collectionName) {
-  const session = getSession();
-
-  // ── STUB MODE (no backend connected) ──
-  if (!session?.token) {
-    console.log('[SC] No session — stub mode', {
-      collectionName,
-      imageCount: images.length,
-      images: images.map((i) => i.url),
-    });
-    return { success: true, count: images.length, stub: true };
-  }
-
-  // ── REAL MODE (backend connected via QR) ──
-  // TODO: Replace with actual endpoint when backend is ready
-  //
-  // Expected backend contract:
-  //   POST /api/uploads
-  //   Headers: Authorization: Bearer <token>
-  //   Body (JSON): {
-  //     folderId: string,        // from session
-  //     collectionName: string,  // user's collection name
-  //     images: [                // array of image data
-  //       { id: string, dataUrl: string }
-  //     ]
-  //   }
-  //   Response: { success: true, uploadedCount: number }
-
-  try {
-    const res = await apiFetch('/api/uploads', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        folderId: session.folderId,
-        collectionName,
-        images: images.map((img) => ({
-          id: img.id,
-          dataUrl: img.url,
-        })),
-      }),
-    });
-
-    const data = await res.json();
-    return { success: true, count: data.uploadedCount || images.length };
-  } catch (err) {
-    console.error('[SC] Upload failed:', err);
-    return { success: false, count: 0, error: err.message };
-  }
+export function getApiKey() {
+  return localStorage.getItem(KEY_STORE);
 }
 
-/**
- * Check if the backend is reachable.
- * Useful for showing connection status in the UI.
- */
-export async function pingBackend() {
-  try {
-    await apiFetch('/api/health');
-    return true;
-  } catch {
-    return false;
+export function setApiKey(key) {
+  localStorage.setItem(KEY_STORE, key);
+}
+
+export function hasApiKey() {
+  return !!getApiKey();
+}
+
+// ── Helpers ──
+
+function dataUrlToBlob(dataUrl) {
+  const [header, b64] = dataUrl.split(',');
+  const mime = header.match(/:(.*?);/)[1];
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
+async function toBlob(url) {
+  if (url.startsWith('data:')) return dataUrlToBlob(url);
+  // External URL — fetch as blob (may fail due to CORS)
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch image (${res.status})`);
+  return res.blob();
+}
+
+// ── Upload a single image to the CDN ──
+
+async function uploadOne(imageUrl) {
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error('No API key');
+
+  const blob = await toBlob(imageUrl);
+
+  // Ensure MIME is jpeg or png
+  let ct = blob.type;
+  if (ct !== 'image/jpeg' && ct !== 'image/png') ct = 'image/jpeg';
+
+  const res = await fetch(CDN_URL, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': ct,
+      'x-fermat-api-key': apiKey,
+    },
+    body: blob,
+  });
+
+  if (res.status === 201) {
+    const loc = res.headers.get('Location') || '';
+    return { success: true, resourceId: loc.split('/').pop() };
   }
+
+  const errText = await res.text().catch(() => '');
+  throw new Error(`${res.status}${errText ? ': ' + errText : ''}`);
+}
+
+// ── Upload multiple images with progress callback ──
+
+export async function uploadImages(images, onProgress) {
+  const results = [];
+  for (let i = 0; i < images.length; i++) {
+    try {
+      const r = await uploadOne(images[i].url);
+      results.push({ ...r, id: images[i].id });
+    } catch (err) {
+      results.push({ success: false, id: images[i].id, error: err.message });
+    }
+    if (onProgress) onProgress(i + 1, images.length);
+  }
+  return results;
 }

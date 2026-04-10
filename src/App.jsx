@@ -4,8 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useCollections } from './hooks/useCollections';
 import { useSession } from './hooks/useSession';
 
-// API
-import { uploadImages } from './api/uploads';
+// Sheets (upload)
 
 // Utils
 import { toDataURL } from './lib/utils';
@@ -26,6 +25,7 @@ import OptionsSheet from './components/sheets/OptionsSheet';
 import RenameSheet from './components/sheets/RenameSheet';
 import ConfirmSheet from './components/sheets/ConfirmSheet';
 import MoveSheet from './components/sheets/MoveSheet';
+import UploadSheet from './components/sheets/UploadSheet';
 
 export default function App() {
   // ── Session (QR code link) ──
@@ -50,7 +50,7 @@ export default function App() {
   const [selIds, setSelIds] = useState(new Set());
   const [showMove, setShowMove] = useState(false);
   const [sheet, setSheet] = useState(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploadImgs, setUploadImgs] = useState(null);
 
   const camRef = useRef(null);
   const rollRef = useRef(null);
@@ -92,24 +92,8 @@ export default function App() {
     exitSel();
   };
 
-  // ── Send to desktop ──
-  const sendToDesktop = async (images) => {
-    setUploading(true);
-    try {
-      const result = await uploadImages(images, active.name);
-      if (result.stub) {
-        alert(`Sent ${images.length} image${images.length !== 1 ? 's' : ''} to ${BRAND}`);
-      } else if (result.success) {
-        alert(`Uploaded ${result.count} image${result.count !== 1 ? 's' : ''} successfully`);
-      } else {
-        alert(`Upload failed: ${result.error}`);
-      }
-    } catch (err) {
-      alert(`Error: ${err.message}`);
-    } finally {
-      setUploading(false);
-    }
-  };
+  // ── Upload confirmation ──
+  const sendToDesktop = (images) => setUploadImgs(images);
 
   return (
     <>
@@ -296,6 +280,9 @@ export default function App() {
           onConfirm={() => { deleteCol(sheet.col.id); setSheet(null); }}
           onClose={() => setSheet(null)}
         />
+      )}
+      {uploadImgs && (
+        <UploadSheet images={uploadImgs} onClose={() => setUploadImgs(null)} />
       )}
     </>
   );
