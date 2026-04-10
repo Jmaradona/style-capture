@@ -1,0 +1,58 @@
+:root {
+  --bg:      #ffffff;
+  --fg:      #0f0f0f;
+  --muted:   #f4f4f4;
+  --mfg:     #8e8e93;
+  --border:  #e5e5e5;
+  --primary: #5727E6;
+  --blue:    #007AFF;
+  --red:     #FF3B30;
+  --nav-h:   56px;
+  --safe-b:  env(safe-area-inset-bottom, 0px);
+  --safe-t:  env(safe-area-inset-top, 0px);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overscroll-behavior: none; overflow: hidden; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: var(--bg);
+  display: flex; justify-content: center;
+}
+
+#root {
+  width: 100%; max-width: 430px;
+  height: 100vh; height: 100svh;
+  display: flex; flex-direction: column;
+  background: var(--bg);
+  overflow: hidden; position: relative;
+}
+@media (min-width: 431px) {
+  body { background: #e8e8e8; align-items: flex-start; }
+  #root { box-shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 8px 48px rgba(0,0,0,0.18); }
+}
+
+button { cursor: pointer; border: none; background: none; font: inherit; color: inherit; }
+input  { -webkit-appearance: none; border: none; outline: none; font: inherit; }
+img    { display: block; }
+* { -webkit-tap-highlight-color: transparent; }
+
+.hd { flex-shrink: 0; background: var(--bg); border-bottom: 1px solid var(--border); padding: 0 16px; padding-top: var(--safe-t); }
+.bd { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
+.nv {
+  flex-shrink: 0;
+  height: calc(var(--nav-h) + var(--safe-b));
+  padding-bottom: var(--safe-b);
+  border-top: 1px solid var(--border);
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: space-around;
+}
+
+@keyframes slideUp   { from{transform:translateY(100%)}to{transform:translateY(0)} }
+@keyframes slideDown { from{transform:translateY(-8px);opacity:0}to{transform:translateY(0);opacity:1} }
+@keyframes fadeIn    { from{opacity:0}to{opacity:1} }
+.su { animation: slideUp   .26s cubic-bezier(.32,.72,0,1) }
+.sd { animation: slideDown .18s cubic-bezier(.2,.8,.4,1) }
+.fi { animation: fadeIn .14s ease }
