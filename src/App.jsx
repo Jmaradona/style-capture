@@ -60,10 +60,12 @@ export default function App() {
 
   // ── Camera handling ──
   const handleCapture = async (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-    const url = await toDataURL(f);
-    addImg(url);
+    const files = [...e.target.files];
+    if (!files.length) return;
+    for (const f of files) {
+      const url = await toDataURL(f);
+      addImg(url);
+    }
     e.target.value = '';
   };
   const openCamera = () => camRef.current?.click();
@@ -112,7 +114,7 @@ export default function App() {
   return (
     <>
       <input ref={camRef} type="file" accept="image/*" capture="environment" onChange={handleCapture} style={{ display: 'none' }} />
-      <input ref={rollRef} type="file" accept="image/*" onChange={handleCapture} style={{ display: 'none' }} />
+      <input ref={rollRef} type="file" accept="image/*" multiple onChange={handleCapture} style={{ display: 'none' }} />
 
       {/* ── GALLERY ── */}
       {tab === 'gallery' && (
