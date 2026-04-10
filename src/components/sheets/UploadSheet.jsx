@@ -168,12 +168,20 @@ export default function UploadSheet({ images, onClose }) {
           </p>
         )}
         {fail > 0 && (
-          <p style={{ fontSize: 13, color: 'var(--red, #e53935)', marginTop: 4 }}>
-            {fail} image{fail !== 1 ? 's' : ''} failed
-            {results.filter((r) => !r.success).some((r) => r.error?.includes('Failed to fetch'))
-              ? ' (external URLs cannot be uploaded — use camera captures)'
-              : ''}
-          </p>
+          <>
+            <p style={{ fontSize: 14, fontWeight: 600, color: '#e53935', marginTop: 4 }}>
+              {fail} image{fail !== 1 ? 's' : ''} failed
+            </p>
+            <div style={{
+              marginTop: 8, padding: '10px 12px', borderRadius: 10,
+              background: '#fff3e0', fontSize: 12, color: '#bf360c',
+              lineHeight: 1.6, textAlign: 'left', maxHeight: 100, overflowY: 'auto',
+            }}>
+              {[...new Set(results.filter((r) => !r.success).map((r) => r.error))].map((err, i) => (
+                <div key={i}>{err}</div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
