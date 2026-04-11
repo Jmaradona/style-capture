@@ -87,6 +87,7 @@ export default function App() {
     else { exitSel(); setTab(t); }
   };
   const handleMv = (to) => {
+    if (!active) return;
     moveImages(active.id, to, [...selIds]);
     setShowMove(false);
     exitSel();
@@ -100,8 +101,43 @@ export default function App() {
       <input ref={camRef} type="file" accept="image/*" capture="environment" onChange={handleCapture} style={{ display: 'none' }} />
       <input ref={rollRef} type="file" accept="image/*" multiple onChange={handleCapture} style={{ display: 'none' }} />
 
+      {/* ── WELCOME (no collections) ── */}
+      {tab === 'gallery' && !active && (
+        <div style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: 'center', flex: 1, padding: '0 32px', textAlign: 'center',
+          minHeight: 'calc(100vh - var(--nav-h) - var(--safe-b))',
+        }}>
+          <div style={{
+            width: 72, height: 72, borderRadius: 20, background: 'linear-gradient(135deg, var(--primary), #7c5ce0)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 20, boxShadow: '0 8px 24px rgba(87,39,230,.25)',
+          }}>
+            <svg width="32" height="32" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="26" height="26" rx="4" />
+              <path d="M3 22l7-7 4 4 6-6 10 10" />
+              <circle cx="22" cy="10" r="2.5" />
+            </svg>
+          </div>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--fg)', letterSpacing: -0.5, marginBottom: 8 }}>
+            Your Style Library
+          </h1>
+          <p style={{ fontSize: 15, color: 'var(--mfg)', lineHeight: 1.5, marginBottom: 28, maxWidth: 260 }}>
+            Create your first collection to start capturing fashion inspiration.
+          </p>
+          <button onClick={() => setSheet('newcol')} style={{
+            padding: '14px 32px', borderRadius: 100, fontSize: 15, fontWeight: 700,
+            background: 'var(--primary)', color: 'white',
+            boxShadow: '0 4px 16px rgba(87,39,230,.4)',
+            transition: 'transform .15s',
+          }}>
+            Create Collection
+          </button>
+        </div>
+      )}
+
       {/* ── GALLERY ── */}
-      {tab === 'gallery' && (
+      {tab === 'gallery' && active && (
         <>
           <div className="hd" style={{ paddingTop: 'calc(var(--safe-t) + 8px)', paddingBottom: 8 }}>
             {sel ? (
@@ -241,7 +277,7 @@ export default function App() {
       )}
 
       {/* ── BOTTOM BAR ── */}
-      {sel && tab === 'gallery' ? (
+      {sel && tab === 'gallery' && active ? (
         <SelBar
           count={selIds.size}
           total={active.images.length}

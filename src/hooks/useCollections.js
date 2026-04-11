@@ -17,7 +17,7 @@ export function useCollections() {
     saveState({ cols, aid: activeId });
   }, [cols, activeId]);
 
-  const active = cols.find((c) => c.id === activeId) || cols[0];
+  const active = cols.length > 0 ? (cols.find((c) => c.id === activeId) || cols[0]) : null;
 
   // ── Mutations ──
 
