@@ -150,29 +150,20 @@ export default function App() {
               </div>
             ) : (
               <button onClick={() => setSheet('picker')} style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                width: '100%', padding: '10px 10px', borderRadius: 16,
-                background: 'var(--muted)', textAlign: 'left',
-                position: 'relative', overflow: 'visible', minHeight: 52,
+                display: 'flex', alignItems: 'center', gap: 11,
+                width: '100%', padding: '8px 10px', borderRadius: 14, background: 'var(--muted)', textAlign: 'left',
               }}>
-                <div style={{ flex: 1, paddingLeft: 4 }}>
-                  <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--fg)', letterSpacing: -0.3 }}>{active.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--mfg)', marginTop: 2 }}>{active.images.length} items</div>
+                <Thumb imgs={active.images} sz={42} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--fg)', letterSpacing: -0.2 }}>{active.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--mfg)', marginTop: 1 }}>{active.images.length} items</div>
                 </div>
                 <div style={{
-                  color: 'var(--mfg)',
+                  color: 'var(--mfg)', marginRight: 2,
                   transform: sheet === 'picker' ? 'rotate(180deg)' : 'rotate(0deg)',
                   transition: 'transform .2s',
                 }}>
                   <ChevDown />
-                </div>
-                <div style={{
-                  width: 72, height: 72, flexShrink: 0,
-                  marginTop: -14, marginBottom: -14, marginRight: -2,
-                  borderRadius: 14, overflow: 'hidden',
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-                }}>
-                  <Thumb imgs={active.images} sz={72} />
                 </div>
               </button>
             )}

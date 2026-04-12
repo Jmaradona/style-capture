@@ -38,7 +38,7 @@ input  { -webkit-appearance: none; border: none; outline: none; font: inherit; }
 img    { display: block; }
 * { -webkit-tap-highlight-color: transparent; }
 
-.hd { flex-shrink: 0; background: var(--bg); border-bottom: 1px solid var(--border); padding: 0 16px; padding-top: var(--safe-t); overflow: visible; z-index: 2; }
+.hd { flex-shrink: 0; background: var(--bg); border-bottom: 1px solid var(--border); padding: 0 16px; padding-top: var(--safe-t); }
 .bd { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
 .nv {
   flex-shrink: 0;
