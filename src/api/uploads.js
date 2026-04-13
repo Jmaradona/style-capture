@@ -1,13 +1,10 @@
-const CDN_URL = 'https://gateway.fermat.app/resources/upload';
+// Proxy URL — the Cloudflare Worker that forwards uploads to the CDN.
+// Update this after deploying the worker (see proxy/README.md).
+const PROXY_URL = 'https://style-capture-proxy.workers.dev';
+
 const KEY_STORE = 'sc-ak';
 
-// Pre-populate key on first load (decoded at runtime, not plain text in source)
-const _dk = 'c2staENZTmtlZm5rVDdF' + 'NFBYMGExQUVjMGh2MVNF' + 'QWdBVTlibnE4RnNXVjR2' + 'M1RVTmEy';
-if (!localStorage.getItem(KEY_STORE)) {
-  try { localStorage.setItem(KEY_STORE, atob(_dk)); } catch (_) { /* noop */ }
-}
-
-// ── API Key management ──
+// ── API Key management (entered manually by the user, never in source) ──
 
 export function getApiKey() {
   return localStorage.getItem(KEY_STORE);
@@ -59,7 +56,7 @@ async function uploadOne(imageUrl) {
 
   let res;
   try {
-    res = await fetch(CDN_URL, {
+    res = await fetch(PROXY_URL, {
       method: 'PUT',
       headers: {
         'Content-Type': ct,
@@ -68,13 +65,14 @@ async function uploadOne(imageUrl) {
       body: blob,
     });
   } catch (err) {
-    // Network error or CORS preflight failure
-    throw new Error('Network error — CORS may be blocking the request from this origin');
+    throw new Error('Network error — proxy may be unreachable');
   }
 
   if (res.status === 201) {
-    const loc = res.headers.get('Location') || '';
-    return { success: true, resourceId: loc.split('/').pop() };
+    // Worker exposes X-Resource-Id; fall back to parsing Location.
+    const rid = res.headers.get('X-Resource-Id')
+      || (res.headers.get('Location') || '').split('/').pop();
+    return { success: true, resourceId: rid };
   }
 
   const errText = await res.text().catch(() => '');
