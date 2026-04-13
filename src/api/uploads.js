@@ -1,6 +1,6 @@
 // Proxy URL — the Cloudflare Worker that forwards uploads to the CDN.
 // Update this after deploying the worker (see proxy/README.md).
-const PROXY_URL = 'https://style-capture-proxy.workers.dev';
+const PROXY_URL = 'https://style-capture-proxy.style-capture-proxy.workers.dev';
 
 const KEY_STORE = 'sc-ak';
 
