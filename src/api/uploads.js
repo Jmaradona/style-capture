@@ -1,22 +1,6 @@
 // Proxy URL — the Cloudflare Worker that forwards uploads to the CDN.
-// Update this after deploying the worker (see proxy/README.md).
+// The API key lives as a secret on the worker, not in this codebase.
 const PROXY_URL = 'https://style-capture-proxy.style-capture-proxy.workers.dev';
-
-const KEY_STORE = 'sc-ak';
-
-// ── API Key management (entered manually by the user, never in source) ──
-
-export function getApiKey() {
-  return localStorage.getItem(KEY_STORE);
-}
-
-export function setApiKey(key) {
-  localStorage.setItem(KEY_STORE, key);
-}
-
-export function hasApiKey() {
-  return !!getApiKey();
-}
 
 // ── Helpers ──
 
@@ -31,18 +15,14 @@ function dataUrlToBlob(dataUrl) {
 
 async function toBlob(url) {
   if (url.startsWith('data:')) return dataUrlToBlob(url);
-  // External URL — fetch as blob (may fail due to CORS)
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Failed to fetch image (${res.status})`);
   return res.blob();
 }
 
-// ── Upload a single image to the CDN ──
+// ── Upload a single image via the proxy ──
 
 async function uploadOne(imageUrl) {
-  const apiKey = getApiKey();
-  if (!apiKey) throw new Error('No API key configured');
-
   let blob;
   try {
     blob = await toBlob(imageUrl);
@@ -50,7 +30,6 @@ async function uploadOne(imageUrl) {
     throw new Error(`Image fetch failed: ${err.message}`);
   }
 
-  // Ensure MIME is jpeg or png (API only accepts these)
   let ct = blob.type;
   if (ct !== 'image/jpeg' && ct !== 'image/png') ct = 'image/jpeg';
 
@@ -58,10 +37,7 @@ async function uploadOne(imageUrl) {
   try {
     res = await fetch(PROXY_URL, {
       method: 'PUT',
-      headers: {
-        'Content-Type': ct,
-        'x-fermat-api-key': apiKey,
-      },
+      headers: { 'Content-Type': ct },
       body: blob,
     });
   } catch (err) {
@@ -69,7 +45,6 @@ async function uploadOne(imageUrl) {
   }
 
   if (res.status === 201) {
-    // Worker exposes X-Resource-Id; fall back to parsing Location.
     const rid = res.headers.get('X-Resource-Id')
       || (res.headers.get('Location') || '').split('/').pop();
     return { success: true, resourceId: rid };

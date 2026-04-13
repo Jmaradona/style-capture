@@ -1,18 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import Sheet from '../Sheet';
 import { BRAND } from '../../lib/brand';
-import { hasApiKey, setApiKey, uploadImages } from '../../api/uploads';
+import { uploadImages } from '../../api/uploads';
 
 export default function UploadSheet({ images, onClose }) {
-  const [step, setStep] = useState('confirm'); // confirm | key | uploading | done
-  const [key, setKey] = useState('');
+  const [step, setStep] = useState('confirm'); // confirm | uploading | done
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState(null);
-  const keyRef = useRef(null);
-
-  useEffect(() => {
-    if (step === 'key' && keyRef.current) keyRef.current.focus();
-  }, [step]);
 
   const startUpload = async () => {
     setStep('uploading');
@@ -22,19 +16,6 @@ export default function UploadSheet({ images, onClose }) {
     setStep('done');
   };
 
-  const handleConfirm = () => {
-    if (!hasApiKey()) { setStep('key'); return; }
-    startUpload();
-  };
-
-  const handleSaveKey = () => {
-    const k = key.trim();
-    if (!k) return;
-    setApiKey(k);
-    setKey('');
-    startUpload();
-  };
-
   const ok = results ? results.filter((r) => r.success).length : 0;
   const fail = results ? results.length - ok : 0;
 
@@ -42,7 +23,6 @@ export default function UploadSheet({ images, onClose }) {
   if (step === 'confirm') {
     return (
       <Sheet title={`Upload to ${BRAND}`} onClose={onClose}>
-        {/* Thumbnails */}
         <div style={{
           display: 'flex', gap: 6, overflowX: 'auto', padding: '4px 0 16px',
           scrollbarWidth: 'none',
@@ -72,52 +52,11 @@ export default function UploadSheet({ images, onClose }) {
             flex: 1, padding: 13, borderRadius: 12, fontSize: 14, fontWeight: 600,
             background: 'var(--muted)', color: 'var(--fg)',
           }}>Cancel</button>
-          <button onClick={handleConfirm} style={{
+          <button onClick={startUpload} style={{
             flex: 1, padding: 13, borderRadius: 12, fontSize: 14, fontWeight: 600,
             background: 'var(--primary)', color: 'white',
             boxShadow: '0 3px 10px rgba(87,39,230,.35)',
           }}>Upload</button>
-        </div>
-      </Sheet>
-    );
-  }
-
-  // ── API Key ──
-  if (step === 'key') {
-    return (
-      <Sheet title="API Key Required" onClose={onClose}>
-        <p style={{ fontSize: 13, color: 'var(--mfg)', lineHeight: 1.5, marginBottom: 14 }}>
-          Enter your API key to connect to the {BRAND} CDN.
-          It's stored only on this device.
-        </p>
-
-        <input
-          ref={keyRef}
-          type="password"
-          value={key}
-          onChange={(e) => setKey(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSaveKey()}
-          placeholder="sk-..."
-          style={{
-            width: '100%', padding: '12px 14px', borderRadius: 12, fontSize: 14,
-            border: '1.5px solid #e0e0e0', background: 'var(--muted)',
-            color: 'var(--fg)', outline: 'none', marginBottom: 16,
-            boxSizing: 'border-box',
-          }}
-        />
-
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={onClose} style={{
-            flex: 1, padding: 13, borderRadius: 12, fontSize: 14, fontWeight: 600,
-            background: 'var(--muted)', color: 'var(--fg)',
-          }}>Cancel</button>
-          <button onClick={handleSaveKey} disabled={!key.trim()} style={{
-            flex: 1, padding: 13, borderRadius: 12, fontSize: 14, fontWeight: 600,
-            background: key.trim() ? 'var(--primary)' : 'var(--muted)',
-            color: key.trim() ? 'white' : 'var(--mfg)',
-            boxShadow: key.trim() ? '0 3px 10px rgba(87,39,230,.35)' : 'none',
-            transition: 'all .15s',
-          }}>Save & Upload</button>
         </div>
       </Sheet>
     );

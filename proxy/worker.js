@@ -1,46 +1,60 @@
 /**
  * Cloudflare Worker — proxy for the Fermat CDN upload endpoint.
  *
- * Why: the browser can't PUT directly to gateway.fermat.app due to CORS.
- * This worker forwards the request server-side, then returns the result
- * with proper CORS headers so the PWA can read it.
+ * The API key lives in a Cloudflare secret (FERMAT_API_KEY) and is
+ * injected server-side, so it never reaches the browser or the repo.
  *
- * The user's API key is sent in the `x-fermat-api-key` header from the
- * client and forwarded verbatim — it is never stored on the worker.
+ * CORS is restricted to the PWA origin to prevent random callers from
+ * abusing the proxy with our key.
  */
 
 const FERMAT_URL = 'https://gateway.fermat.app/resources/upload';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'PUT, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, x-fermat-api-key',
-  'Access-Control-Expose-Headers': 'Location, X-Resource-Id',
-  'Access-Control-Max-Age': '86400',
-};
+const ALLOWED_ORIGINS = new Set([
+  'https://jmaradona.github.io',
+  'http://localhost:5173',
+  'http://localhost:4173',
+]);
+
+function corsHeadersFor(origin) {
+  const allow = ALLOWED_ORIGINS.has(origin) ? origin : 'https://jmaradona.github.io';
+  return {
+    'Access-Control-Allow-Origin': allow,
+    'Vary': 'Origin',
+    'Access-Control-Allow-Methods': 'PUT, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Expose-Headers': 'Location, X-Resource-Id',
+    'Access-Control-Max-Age': '86400',
+  };
+}
 
 export default {
-  async fetch(request) {
-    // CORS preflight
+  async fetch(request, env) {
+    const origin = request.headers.get('Origin') || '';
+    const cors = corsHeadersFor(origin);
+
     if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: corsHeaders });
+      return new Response(null, { status: 204, headers: cors });
     }
 
     if (request.method !== 'PUT') {
-      return new Response('Method not allowed', { status: 405, headers: corsHeaders });
+      return new Response('Method not allowed', { status: 405, headers: cors });
     }
 
-    const apiKey = request.headers.get('x-fermat-api-key');
+    const apiKey = env.FERMAT_API_KEY;
     if (!apiKey) {
-      return new Response('Missing x-fermat-api-key header', { status: 401, headers: corsHeaders });
+      return new Response('Server misconfigured: missing FERMAT_API_KEY secret', {
+        status: 500, headers: cors,
+      });
     }
 
     const contentType = request.headers.get('content-type') || 'image/jpeg';
     if (contentType !== 'image/jpeg' && contentType !== 'image/png') {
-      return new Response('Content-Type must be image/jpeg or image/png', { status: 400, headers: corsHeaders });
+      return new Response('Content-Type must be image/jpeg or image/png', {
+        status: 400, headers: cors,
+      });
     }
 
-    // Forward to Fermat CDN
     let upstream;
     try {
       upstream = await fetch(FERMAT_URL, {
@@ -52,16 +66,13 @@ export default {
         body: request.body,
       });
     } catch (err) {
-      return new Response(`Upstream error: ${err.message}`, { status: 502, headers: corsHeaders });
+      return new Response(`Upstream error: ${err.message}`, { status: 502, headers: cors });
     }
 
-    // Build response with CORS + Location header passthrough
-    const responseHeaders = { ...corsHeaders };
+    const responseHeaders = { ...cors };
     const location = upstream.headers.get('Location');
     if (location) {
       responseHeaders['Location'] = location;
-      // Also expose the resource ID directly so the client doesn't have
-      // to parse the Location header (some browsers strip it).
       const resourceId = location.split('/').pop();
       if (resourceId) responseHeaders['X-Resource-Id'] = resourceId;
     }
