@@ -10,7 +10,7 @@ import { uid } from '../lib/utils';
 export function useCollections() {
   const saved = loadState();
   const [cols, setCols] = useState(saved?.cols || SAMPLE_COLLECTIONS);
-  const [activeId, setActiveId] = useState(saved?.aid || SAMPLE_COLLECTIONS[0].id);
+  const [activeId, setActiveId] = useState(saved?.aid || 'embroidery');
 
   // Persist on every change
   useEffect(() => {

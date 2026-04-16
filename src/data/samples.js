@@ -2,7 +2,20 @@
  * Sample collections — shown when no localStorage data exists.
  * Real Vinted product images (flat lay / product-only shots).
  */
+const BASE = import.meta.env.BASE_URL;
+
 export const SAMPLE_COLLECTIONS = [
+  {
+    id: 'embroidery',
+    name: 'Embroidery shopping',
+    images: [
+      { id: 'e1', url: `${BASE}samples/embroidery/bag.webp` },
+      { id: 'e2', url: `${BASE}samples/embroidery/sneakers.webp` },
+      { id: 'e3', url: `${BASE}samples/embroidery/skirt.webp` },
+      { id: 'e4', url: `${BASE}samples/embroidery/pinafore.webp` },
+      { id: 'e5', url: `${BASE}samples/embroidery/jacket.webp` },
+    ],
+  },
   {
     id: 'jackets',
     name: 'Jackets',
